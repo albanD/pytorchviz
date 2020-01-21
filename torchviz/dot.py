@@ -21,6 +21,8 @@ def make_dot(var, params=None):
     if params is not None:
         assert all(isinstance(p, Variable) for p in params.values())
         param_map = {id(v): k for k, v in params.items()}
+    else:
+        param_map = {}
 
     node_attr = dict(style='filled',
                      shape='box',
@@ -36,17 +38,18 @@ def make_dot(var, params=None):
 
     output_nodes = (var.grad_fn,) if not isinstance(var, tuple) else tuple(v.grad_fn for v in var)
 
+    def get_var_name(var):
+        name = param_map[id(var)] if id(var) in param_map else ''
+        return '%s\n %s' % (name, size_to_str(var.size()))
+
     def add_nodes(var):
         if var not in seen:
             if torch.is_tensor(var):
                 # note: this used to show .saved_tensors in pytorch0.2, but stopped
                 # working as it was moved to ATen and Variable-Tensor merged
-                dot.node(str(id(var)), size_to_str(var.size()), fillcolor='orange')
+                dot.node(str(id(var)), get_var_name(var), fillcolor='orange', shape="ellipse")
             elif hasattr(var, 'variable'):
-                u = var.variable
-                name = param_map[id(u)] if params is not None else ''
-                node_name = '%s\n %s' % (name, size_to_str(u.size()))
-                dot.node(str(id(var)), node_name, fillcolor='lightblue')
+                dot.node(str(id(var)), get_var_name(var.variable), fillcolor='lightblue', shape="ellipse")
             elif var in output_nodes:
                 dot.node(str(id(var)), str(type(var).__name__), fillcolor='darkolivegreen1')
             else:
@@ -62,12 +65,24 @@ def make_dot(var, params=None):
                     dot.edge(str(id(t)), str(id(var)))
                     add_nodes(t)
 
+    def add_base_tensor(var, color='green'):
+        if var in seen:
+            return
+        dot.node(str(id(var)), get_var_name(var), fillcolor=color, shape="ellipse")
+        add_nodes(var.grad_fn)
+        dot.edge(str(id(var.grad_fn)), str(id(var)))
+        if var._is_view():
+            add_base_tensor(var._base, color='lightgreen')
+            dot.edge(str(id(var._base)), str(id(var)), style="dotted")
+        seen.add(var)
+
+
     # handle multiple outputs
     if isinstance(var, tuple):
         for v in var:
-            add_nodes(v.grad_fn)
+            add_base_tensor(v)
     else:
-        add_nodes(var.grad_fn)
+        add_base_tensor(var)
 
     resize_graph(dot)
 
