@@ -124,7 +124,8 @@ def make_dot(var, params=None, show_attrs=False, show_saved=False, max_attr_char
             dot.edge(str(id(var)), str(id(fn)))
 
         # add the node for this grad_fn
-        dot.node(str(id(fn)), get_fn_name(fn, show_attrs, max_attr_chars))
+        color = 'red' if fn.metadata.get("failed_", False) else 'lightblue'
+        dot.node(str(id(fn)), get_fn_name(fn, show_attrs, max_attr_chars), fillcolor=color)
 
         # recurse
         if hasattr(fn, 'next_functions'):
