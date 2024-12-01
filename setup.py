@@ -4,9 +4,12 @@ import shutil
 import sys
 from setuptools import setup, find_packages
 
-VERSION = '0.0.2'
+VERSION = '0.0.3'
 
-long_description = ""
+# Read in README.md for our long_description
+cwd = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(cwd, "README.md"), encoding="utf-8") as f:
+    long_description = f.read()
 
 setup_info = dict(
     # Metadata
@@ -17,6 +20,7 @@ setup_info = dict(
     url='https://github.com/pytorch/pytorchviz',
     description='A small package to create visualizations of PyTorch execution graphs',
     long_description=long_description,
+    long_description_content_type="text/markdown",
     license='BSD',
 
     # Package info

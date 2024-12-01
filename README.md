@@ -1,5 +1,5 @@
 PyTorchViz
-=======
+==========
 
 A small package to create visualizations of PyTorch execution graphs and traces.
 
