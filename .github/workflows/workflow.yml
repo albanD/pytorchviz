@@ -59,7 +59,7 @@ jobs:
     - name: Install torchviz
       run: |
         ls -la dist
-        python -m pip install dist/torchviz-0.0.2-py3-none-any.whl
+        python -m pip install dist/torchviz-*.whl
     - name: Run tests
       run: python test/test.py
 
